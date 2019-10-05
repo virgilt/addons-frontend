@@ -1,15 +1,13 @@
-import url from 'url';
-
 import * as React from 'react';
 
+import AppBanner from 'amo/components/AppBanner';
 import HeroRecommendation, {
   PRIMARY_HERO_CLICK_CATEGORY,
   PRIMARY_HERO_SRC,
-  addParamsToHeroURL,
   HeroRecommendationBase,
 } from 'amo/components/HeroRecommendation';
 import { createInternalHeroShelves } from 'amo/reducers/home';
-import { getAddonURL } from 'amo/utils';
+import { addParamsToHeroURL, getAddonURL } from 'amo/utils';
 import {
   createFakeEvent,
   createFakeTracking,
@@ -17,7 +15,6 @@ import {
   fakeAddon,
   fakeI18n,
   fakePrimaryHeroShelfExternal,
-  getFakeConfig,
   shallowUntilTarget,
 } from 'tests/unit/helpers';
 
@@ -89,49 +86,70 @@ describe(__filename, () => {
     });
 
     it('configures an external link to open in a new tab', () => {
-      const _isInternalURL = sinon.stub().returns(false);
+      const _checkInternalURL = sinon.stub().returns({ isInternal: false });
       const external = fakePrimaryHeroShelfExternal;
       const shelfData = createShelfData({ external });
 
-      const root = render({ _isInternalURL, shelfData });
+      const root = render({ _checkInternalURL, shelfData });
 
       const link = root.find('.HeroRecommendation-link');
       expect(link).toHaveProp('rel', 'noopener noreferrer');
       expect(link).toHaveProp('target', '_blank');
       sinon.assert.calledWith(
-        _isInternalURL,
+        _checkInternalURL,
         sinon.match({ urlString: sinon.match(external.homepage) }),
       );
     });
 
     it('does not configure an internal link to open in a new tab', () => {
-      const _isInternalURL = sinon.stub().returns(true);
-      const slug = 'some-slug';
-      const shelfData = createShelfData({
-        addon: { ...fakeAddon, slug },
-      });
+      const _checkInternalURL = sinon.stub().returns({ isInternal: true });
+      const external = fakePrimaryHeroShelfExternal;
+      const shelfData = createShelfData({ external });
 
-      const root = render({ _isInternalURL, shelfData });
+      const root = render({ _checkInternalURL, shelfData });
 
       const link = root.find('.HeroRecommendation-link');
       expect(link).not.toHaveProp('rel');
       expect(link).not.toHaveProp('target');
       sinon.assert.calledWith(
-        _isInternalURL,
-        sinon.match({ urlString: sinon.match(slug) }),
+        _checkInternalURL,
+        sinon.match({ urlString: sinon.match(external.homepage) }),
       );
     });
   });
 
-  it('renders an image', () => {
+  it('renders with an image', () => {
     const featuredImage = 'https://mozilla.org/featured.png';
     const shelfData = createShelfData({ addon: fakeAddon, featuredImage });
 
     const root = render({ shelfData });
 
+    expect(root).not.toHaveClassName('HeroRecommendation--no-image');
     expect(root.find('.HeroRecommendation-image')).toHaveProp(
       'src',
       featuredImage,
+    );
+  });
+
+  it('renders without an image', () => {
+    const featuredImage = null;
+    const shelfData = createShelfData({ addon: fakeAddon, featuredImage });
+
+    const root = render({ shelfData });
+
+    expect(root).toHaveClassName('HeroRecommendation--no-image');
+    expect(root.find('.HeroRecommendation-image')).toHaveLength(0);
+  });
+
+  it('assigns a className based on the gradient', () => {
+    const gradient = { start: 'start-color', end: 'stop-color' };
+    const shelfData = createShelfData({ addon: fakeAddon, gradient });
+
+    const root = render({ shelfData });
+
+    expect(root).toHaveClassName('HeroRecommendation');
+    expect(root).toHaveClassName(
+      `HeroRecommendation-${gradient.start}-${gradient.end}`,
     );
   });
 
@@ -166,112 +184,10 @@ describe(__filename, () => {
     expect(root.find('.HeroRecommendation-body').html()).toContain(description);
   });
 
-  describe('addParamsToHeroURL', () => {
-    let _addQueryParams;
-    let _isInternalURL;
-    const urlString = '/path/name';
-    const internalQueryParams = { internalParam1: 'internalParam1' };
-    const externalQueryParams = { externalParam1: 'externalParam1' };
+  it('renders an AppBanner', () => {
+    const root = render();
 
-    beforeEach(() => {
-      _addQueryParams = sinon.spy();
-      _isInternalURL = sinon.stub();
-    });
-
-    it('passes internal query params to _addQueryParams for an internal URL', () => {
-      _isInternalURL.returns(true);
-
-      addParamsToHeroURL({
-        _addQueryParams,
-        _isInternalURL,
-        externalQueryParams,
-        internalQueryParams,
-        urlString,
-      });
-
-      sinon.assert.calledWith(_addQueryParams, urlString, internalQueryParams);
-    });
-
-    it('passes default internal query params to _addQueryParams for an internal URL', () => {
-      _isInternalURL.returns(true);
-
-      addParamsToHeroURL({
-        _addQueryParams,
-        _isInternalURL,
-        urlString,
-      });
-
-      sinon.assert.calledWith(_addQueryParams, urlString, {
-        src: PRIMARY_HERO_SRC,
-      });
-    });
-
-    it('allows for override of heroSrcCode for an internal URL', () => {
-      const heroSrcCode = 'test-src-code';
-      _isInternalURL.returns(true);
-
-      addParamsToHeroURL({
-        _addQueryParams,
-        _isInternalURL,
-        heroSrcCode,
-        urlString,
-      });
-
-      sinon.assert.calledWith(_addQueryParams, urlString, {
-        src: heroSrcCode,
-      });
-    });
-
-    it('passes external query params to _addQueryParams for an external URL', () => {
-      _isInternalURL.returns(false);
-
-      addParamsToHeroURL({
-        _addQueryParams,
-        _isInternalURL,
-        externalQueryParams,
-        internalQueryParams,
-        urlString,
-      });
-
-      sinon.assert.calledWith(_addQueryParams, urlString, externalQueryParams);
-    });
-
-    it('passes default external query params to _addQueryParams for an external URL', () => {
-      const baseURL = 'https://example.org';
-      const _config = getFakeConfig({ baseURL });
-      _isInternalURL.returns(false);
-
-      addParamsToHeroURL({
-        _addQueryParams,
-        _config,
-        _isInternalURL,
-        urlString,
-      });
-
-      sinon.assert.calledWith(_addQueryParams, urlString, {
-        utm_content: PRIMARY_HERO_SRC,
-        utm_medium: 'referral',
-        utm_source: url.parse(baseURL).host,
-      });
-    });
-
-    it('allows for override of heroSrcCode for an external URL', () => {
-      const heroSrcCode = 'test-src-code';
-      _isInternalURL.returns(false);
-
-      addParamsToHeroURL({
-        _addQueryParams,
-        _isInternalURL,
-        heroSrcCode,
-        urlString,
-      });
-
-      sinon.assert.calledWith(
-        _addQueryParams,
-        urlString,
-        sinon.match({ utm_content: heroSrcCode }),
-      );
-    });
+    expect(root.find(AppBanner)).toHaveLength(1);
   });
 
   describe('makeCallToActionURL', () => {
@@ -282,7 +198,10 @@ describe(__filename, () => {
       const root = render({ shelfData });
 
       expect(root.instance().makeCallToActionURL()).toEqual(
-        addParamsToHeroURL({ urlString: getAddonURL(slug) }),
+        addParamsToHeroURL({
+          heroSrcCode: PRIMARY_HERO_SRC,
+          urlString: getAddonURL(slug),
+        }),
       );
     });
 
@@ -295,7 +214,10 @@ describe(__filename, () => {
       const root = render({ shelfData });
 
       expect(root.instance().makeCallToActionURL()).toEqual(
-        addParamsToHeroURL({ urlString: homepage }),
+        addParamsToHeroURL({
+          heroSrcCode: PRIMARY_HERO_SRC,
+          urlString: homepage,
+        }),
       );
     });
   });

@@ -197,6 +197,29 @@ describe(__filename, () => {
       );
     });
 
+    // See: https://github.com/mozilla/addons-frontend/issues/8633
+    it('logs and ignores rejected install errors', async () => {
+      let finishInstall;
+      const installToFinish = new Promise((resolve) => {
+        finishInstall = resolve;
+      });
+      const _log = getFakeLogger();
+
+      fakeInstallObj.install = sinon.spy(() => {
+        return Promise.reject(new Error('oops'));
+      });
+
+      addonManager.install(fakeInstallUrl, fakeCallback, {
+        _log,
+        _mozAddonManager: fakeMozAddonManager,
+        onIgnoredRejection: () => finishInstall(),
+        src: 'home',
+      });
+
+      await installToFinish;
+      sinon.assert.calledOnce(_log.warn);
+    });
+
     it('passes the installObj, the event and the id to the callback', async () => {
       const fakeEvent = { type: 'fakeEvent' };
 

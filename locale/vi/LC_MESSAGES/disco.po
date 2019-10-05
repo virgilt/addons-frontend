@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: disco\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-09-03 18:07+0000\n"
-"PO-Revision-Date: 2019-08-28 14:14+0000\n"
+"POT-Creation-Date: 2019-10-01 16:23+0000\n"
+"PO-Revision-Date: 2019-09-26 02:10+0000\n"
 "Last-Translator: Quế Tùng <best.cloney.1301@gmail.com>\n"
 "Language-Team: none\n"
 "Language: vi\n"
@@ -14,11 +14,11 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pontoon\n"
 
-#: src/amo/components/InstallWarning/index.js:134
+#: src/amo/components/InstallWarning/index.js:112
 msgid "Learn more"
 msgstr "Tìm hiểu thêm"
 
-#: src/amo/components/InstallWarning/index.js:138
+#: src/amo/components/InstallWarning/index.js:116
 msgid ""
 "This extension isn’t monitored by Mozilla. Make sure you trust the extension "
 "before you install it."
@@ -228,7 +228,7 @@ msgstr "Tải lại để tiếp tục"
 
 #: src/ui/components/Notice/index.js:147
 msgid "Dismiss this notice"
-msgstr "Loại bỏ thông báo này"
+msgstr "Bỏ qua thông báo này"
 
 #: src/ui/components/ThemeImage/index.js:33
 msgid "Preview of %(title)s"

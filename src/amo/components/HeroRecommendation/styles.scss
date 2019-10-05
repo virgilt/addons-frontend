@@ -1,19 +1,21 @@
 @import '~amo/css/styles';
 
-.HeroRecommendation {
+.HeroRecommendation-wrapper {
+  margin: 0 auto;
+  max-width: $max-content-width;
+}
+
+.HeroRecommendation-banner {
+  padding-bottom: 0;
+}
+
+.HeroRecommendation-content {
   color: $white;
   display: flex;
-  // This works around a layout bug in Firefox.
-  // It is currently unfixed as of 70.0 (Nightly).
-  // https://github.com/mozilla/addons-frontend/issues/8426
-  overflow: auto;
   padding: 24px;
-  position: relative;
 
   @include respond-to(extraExtraLarge) {
     padding: 36px;
-
-    @include padding-start(96px);
   }
 }
 
@@ -25,40 +27,7 @@
   }
 
   @include respond-to(extraExtraLarge) {
-    @include margin-start(136px);
-  }
-}
-
-$overlayShapeZIndex: 1;
-
-.HeroRecommendation-overlayShape {
-  bottom: 0;
-  height: 70%;
-  left: 0;
-  max-height: 307px;
-  position: absolute;
-  z-index: $overlayShapeZIndex;
-
-  [dir='rtl'] & {
-    left: auto;
-    right: 0;
-    transform: scaleX(-1);
-  }
-}
-
-.HeroRecommendation-image {
-  height: 0;
-  visibility: hidden;
-  width: 0;
-
-  @include respond-to(medium) {
-    height: auto;
-    visibility: visible;
-    width: 100%;
-  }
-
-  @include respond-to(extraExtraLarge) {
-    width: 480px;
+    @include margin-start(132px);
   }
 }
 
@@ -106,7 +75,50 @@ $overlayShapeZIndex: 1;
   }
 }
 
+.HeroRecommendation--no-image {
+  justify-content: center;
+
+  @include respond-to(extraExtraLarge) {
+    @include padding-start(36px);
+  }
+
+  .HeroRecommendation-info {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+
+    @include respond-to(large) {
+      width: 576px;
+    }
+  }
+
+  .HeroRecommendation-recommended,
+  .HeroRecommendation-heading,
+  .HeroRecommendation-body,
+  .HeroRecommendation-link {
+    text-align: center;
+  }
+}
+
+.HeroRecommendation-image {
+  height: 0;
+  visibility: hidden;
+  width: 0;
+
+  @include respond-to(medium) {
+    height: auto;
+    visibility: visible;
+    width: 100%;
+  }
+
+  @include respond-to(extraExtraLarge) {
+    width: 480px;
+  }
+}
+
 .HeroRecommendation-link {
+  background-color: transparent;
   border: 4px solid $white;
   display: inline-block;
   font-size: $font-size-m;
@@ -126,55 +138,34 @@ $overlayShapeZIndex: 1;
   }
 }
 
-.HeroRecommendation-heading,
-.HeroRecommendation-body,
-.HeroRecommendation-link {
-  position: relative;
-  z-index: $overlayShapeZIndex + 1;
-}
-
-.HeroRecommendation-purple {
-  $heroPurple1: #20123a;
-  $heroPurple2: #712290;
-  $heroPurple3: #592acb;
-  $heroPurple4: #312a65;
-  $heroPurple5: #9059ff;
-  $heroPurple6: #e31587;
-  $heroPurple7: #312a65;
-
-  background-image: linear-gradient($heroPurple1, $heroPurple2);
-
-  .HeroRecommendation-gradientA-startColor {
-    stop-color: $heroPurple3;
-  }
-
-  .HeroRecommendation-gradientA-endColor {
-    stop-color: $heroPurple4;
-  }
-
-  .HeroRecommendation-gradientB-startColor {
-    stop-color: $heroPurple5;
-  }
-
-  .HeroRecommendation-gradientB-endColor {
-    stop-color: $heroPurple6;
-  }
-
-  .HeroRecommendation-solidSwoosh {
-    fill: $heroPurple7;
-  }
+@mixin gradientStyle($startColor, $stopColor) {
+  background-image: linear-gradient($startColor, $stopColor);
 
   .HeroRecommendation-link {
-    &,
     &:hover,
     &:active {
-      // Fill the background on small screens in case the overlayShape
-      // overlaps the button. Also, fill the background when hovering.
-      background-color: $heroPurple2;
-    }
-
-    @include respond-to(large) {
-      background-color: transparent;
+      background-color: $stopColor;
     }
   }
+}
+
+// Styles that correspond to gradients returned by the hero API
+.HeroRecommendation-color-ink-80-color-blue-70 {
+  @include gradientStyle($color-ink-80, $color-blue-70);
+}
+
+.HeroRecommendation-color-ink-80-color-green-70 {
+  @include gradientStyle($color-ink-80, $color-green-70);
+}
+
+.HeroRecommendation-color-ink-80-color-pink-70 {
+  @include gradientStyle($color-ink-80, $color-pink-70);
+}
+
+.HeroRecommendation-color-ink-80-color-purple-70 {
+  @include gradientStyle($color-ink-80, $color-purple-70);
+}
+
+.HeroRecommendation-color-ink-80-color-violet-70 {
+  @include gradientStyle($color-ink-80, $color-violet-70);
 }

@@ -6,6 +6,7 @@ import base62 from 'base62';
 import config from 'config';
 
 import { makeQueryString } from 'core/api';
+import { addQueryParams } from 'core/utils';
 
 /*
  * Return a base62 object that encodes/decodes just like how Django does it
@@ -55,15 +56,65 @@ export const getCanonicalURL = ({
   return `${_config.get('baseURL')}${locationPathname}`;
 };
 
-export const isInternalURL = ({
+export const checkInternalURL = ({
   _config = config,
   urlString,
 }: {|
   _config?: typeof config,
   urlString: string,
-|}): boolean => {
+|}): { isInternal: boolean, relativeURL: string } => {
   const baseURL = _config.get('baseURL');
   const urlParts = url.parse(urlString, true);
+  const isRelative =
+    // The double slash is for protocol-free URLs.
+    urlString.startsWith('/') && !urlString.startsWith('//');
+  const currentHost = url.parse(baseURL).host || '';
+  const isForCurrentHost =
+    currentHost === urlParts.host || urlString.startsWith(`//${currentHost}`);
+  const isInternal = isRelative || isForCurrentHost;
 
-  return !urlParts.protocol || url.parse(baseURL).host === urlParts.host;
+  let relativeURL = urlString.startsWith(`//${currentHost}`)
+    ? urlString.replace(`//${currentHost}`, '')
+    : urlString.replace(baseURL, '');
+  if (isInternal && !relativeURL.startsWith('/')) {
+    relativeURL = `/${relativeURL}`;
+  }
+
+  return {
+    isInternal,
+    relativeURL,
+  };
+};
+
+type QueryParams = { [key: string]: any };
+
+type AddParamsToHeroURLParams = {|
+  _addQueryParams?: typeof addQueryParams,
+  _config?: typeof config,
+  _checkInternalURL?: typeof checkInternalURL,
+  heroSrcCode: string,
+  internalQueryParams?: QueryParams,
+  externalQueryParams?: QueryParams,
+  urlString: string,
+|};
+
+export const addParamsToHeroURL = ({
+  _addQueryParams = addQueryParams,
+  _config = config,
+  _checkInternalURL = checkInternalURL,
+  heroSrcCode,
+  internalQueryParams = { src: heroSrcCode },
+  externalQueryParams = {
+    utm_content: heroSrcCode,
+    utm_medium: 'referral',
+    utm_source: url.parse(_config.get('baseURL')).host,
+  },
+  urlString,
+}: AddParamsToHeroURLParams) => {
+  return _addQueryParams(
+    urlString,
+    _checkInternalURL({ urlString }).isInternal
+      ? internalQueryParams
+      : externalQueryParams,
+  );
 };

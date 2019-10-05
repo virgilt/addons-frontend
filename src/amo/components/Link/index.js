@@ -69,6 +69,13 @@ export class LinkBase extends React.Component {
       prependClientApp,
       prependLang,
     });
+
+    const createLinkDest = (urlString) => {
+      return urlPrefix && !urlString.startsWith(urlPrefix)
+        ? joinUrl.pathname(urlPrefix, urlString)
+        : urlString;
+    };
+
     const needsExternalIcon = externalDark || external;
     const iconName = externalDark ? 'external-dark' : 'external';
 
@@ -95,10 +102,8 @@ export class LinkBase extends React.Component {
     };
 
     if (typeof href === 'string') {
-      const linkHref = urlPrefix ? joinUrl.pathname(urlPrefix, href) : href;
-
       return (
-        <a {...linkProps} href={linkHref}>
+        <a {...linkProps} href={createLinkDest(href)}>
           {children}
           {needsExternalIcon ? <Icon name={iconName} /> : null}
         </a>
@@ -107,13 +112,11 @@ export class LinkBase extends React.Component {
 
     let linkTo = to;
     if (typeof to === 'string') {
-      linkTo = urlPrefix ? joinUrl.pathname(urlPrefix, to) : to;
+      linkTo = createLinkDest(to);
     } else if (to && to.pathname) {
       linkTo = {
         ...to,
-        pathname: urlPrefix
-          ? joinUrl.pathname(urlPrefix, to.pathname)
-          : to.pathname,
+        pathname: createLinkDest(to.pathname),
       };
     }
 
